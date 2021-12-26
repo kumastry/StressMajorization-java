@@ -1,4 +1,4 @@
-//頂点に関するクラス
+//グラフに関するクラス
 public class Graph {
     //nodeには各頂点の座標が格納される
     private double[][] node;
@@ -21,6 +21,11 @@ public class Graph {
         matrix = m.clone();
     }
 
+    void graphDraw() {
+        for(int i = 0; i < node.length; i++) {
+            System.out.println("f");
+        }
+    }
 
     void syo() {
         System.out.println("fffff");

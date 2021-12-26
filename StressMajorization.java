@@ -5,11 +5,11 @@ public class StressMajorization implements Runnable {
     private int dim;
     private double [][] d;
     private double [][] w;
-    private Vertex Xt;
+    private Graph Xt;
     private static final double EPS = 1e-4;
     private static final double INF = 1e9;
 
-    StressMajorization(Vertex matrix) {
+    StressMajorization(Graph matrix) {
         n = matrix.getColumnNum();
         dim = matrix.getRowNum();
         d = new double[n][n];
@@ -62,7 +62,7 @@ public class StressMajorization implements Runnable {
     }
 
     public void run() {
-        Xt = new Vertex(n, dim);
+        Xt = new Graph(n, dim);
         double prev = INF;
 
         do {
