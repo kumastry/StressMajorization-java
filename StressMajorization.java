@@ -5,19 +5,43 @@ public class StressMajorization implements Runnable {
     private int dim;
     private double [][] d;
     private double [][] w;
-    private Graph Xt;
+    private double [][] Xt;
     private static final double EPS = 1e-4;
     private static final double INF = 1e9;
+    private Result result;
 
-    StressMajorization(Graph matrix) {
-        n = matrix.getColumnNum();
-        dim = matrix.getRowNum();
+
+    StressMajorization(int [][] input, int dim) {
+        this.dim = dim;
+        this.n = -1;
+        for(int i = 0; i < input.length; i++) {
+            n = Math.max(n, Math.max(input[i][0], input[i][1]));
+        }
+
         d = new double[n][n];
         w = new double[n][n];
-        matrix = matrix;
+
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                if(i == j) {
+                    d[i][j] = 0;
+                } else {
+                    d[i][j] = INF;
+                }
+            }
+        }
+
+        for(int i = 0; i < input.length; i++) {
+            int from = input[i][0]-1;
+            int to = input[i][1]-1;
+            int weight = input[i][2];
+
+            d[from][to] = weight;
+            d[to][from] = weight;
+        }
     }
 
-    StressMajorization(StressMajorization sm) {
+    StressMajorization(int id ,StressMajorization sm, Result result) {
         this.n = sm.n;
         this.dim = sm.dim;
         this.d = sm.d.clone();
@@ -26,10 +50,11 @@ public class StressMajorization implements Runnable {
 
     //dとwの準備
     public void ready() {
+        
         for (int k = 0; k < n; k++){       
             for (int i = 0; i < n; i++) {    
                 for (int j = 0; j < n; j++) {  
-                    d[i][j] =   Math.min(d[i][j], d[i][k] + d[k][j]);
+                    d[i][j] = Math.min(d[i][j], d[i][k] + d[k][j]);
                 }
             }
         }
@@ -44,17 +69,24 @@ public class StressMajorization implements Runnable {
         }
     }
 
+    private double norm(double[] m) {
+        double res = 0;
+        for(int i = 0; i < m.length; i++) {
+            res += m[i]*m[i];
+        }
+        return Math.sqrt(res);
+    }
     //stress関数
-    private double stress(Vertex X) {
+    private double stress(double[][] X) {
         double stressVal = 0;
         for(int i = 0; i < n; i++) {
             for(int j = 0; j < n; j++) {
                 if(i != j) {
                     double [] Xij = new double[dim];
                     for(int k = 0; k < dim; k++) {
-                        Xij[k] = X.cell(i, k)-X.cell(j, k);
+                        Xij[k] = X[i][k]-X[j][k];
                     }
-                    stressVal += w[i][j]*(Vertex.norm(Xij)-d[i][j])*(Vertex.norm(Xij)-d[i][j]);
+                    stressVal += w[i][j]*(norm(Xij)-d[i][j])*(norm(Xij)-d[i][j]);
                 }
             }
         }
@@ -62,7 +94,7 @@ public class StressMajorization implements Runnable {
     }
 
     public void run() {
-        Xt = new Graph(n, dim);
+        Xt = new double[n][dim];
         double prev = INF;
 
         do {
@@ -75,13 +107,13 @@ public class StressMajorization implements Runnable {
                         if(i == j) continue;
                         double [] Xij = new double[dim];
                         for(int k = 0; k < dim; k++) {
-                            Xij[k] = Xt.cell(i, k)-Xt.cell(j, k);
+                            Xij[k] = Xt[i][k]-Xt[j][k];
                         }
 
-                        if(Vertex.norm(Xij) < EPS) {
-                            up += w[i][j]*(Xt[j][a]+d[i][j]*(Xt[i][a]-Xt[j][a])) / Vertex.norm(Xij)
+                        if(Graph.norm(Xij) < EPS) {
+                            up += w[i][j]*(Xt[j][a]+d[i][j]*(Xt[i][a]-Xt[j][a])) / norm(Xij);
                         } else {
-                            up += w[i][j]*(X[j][a]);
+                            up += w[i][j]*(Xt[j][a]);
                         }
 
                         Xt[i][a] =   up / down;                      
@@ -91,15 +123,14 @@ public class StressMajorization implements Runnable {
 
             double cur = stress(Xt);
             if(prev - cur < EPS) {
+                prev = cur;
                 break;
             }
 
             prev = cur;
         } while(true);
-    }
 
-    Vertex result() {
-        return Xt;
+        result.addResult(new Output(prev, Xt));//curとXtを保存し、Resultに格納する
     }
 
 
