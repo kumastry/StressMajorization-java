@@ -8,7 +8,8 @@ public class StressMajorization implements Runnable {
     private double [][] Xt;
     private static final double EPS = 1e-4;
     private static final double INF = 1e9;
-    private Result result;
+    private Result result = new Result();
+    private int id;
 
 
     StressMajorization(int [][] input, int dim) {
@@ -46,11 +47,12 @@ public class StressMajorization implements Runnable {
         this.dim = sm.dim;
         this.d = sm.d.clone();
         this.w = sm.w.clone();
+        this.id = id;
     }
 
     //dとwの準備
     public void ready() {
-        
+
         for (int k = 0; k < n; k++){       
             for (int i = 0; i < n; i++) {    
                 for (int j = 0; j < n; j++) {  
@@ -80,7 +82,7 @@ public class StressMajorization implements Runnable {
     private double stress(double[][] X) {
         double stressVal = 0;
         for(int i = 0; i < n; i++) {
-            for(int j = 0; j < n; j++) {
+            for(int j = 0; j < i; j++) {
                 if(i != j) {
                     double [] Xij = new double[dim];
                     for(int k = 0; k < dim; k++) {
@@ -95,14 +97,30 @@ public class StressMajorization implements Runnable {
 
     public void run() {
         Xt = new double[n][dim];
+
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < dim; j++) {
+                Xt[i][j] = 20*Math.random();
+                //System.out.println(Xt[i][j]);
+            }
+        }
+
+        System.out.println("str");
         double prev = INF;
+        double bottom = 0;
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                bottom += w[i][j];
+            }
+        }
 
         do {
 
             for(int i = 0; i < n; i++) {
-                for(int a = 0; a < n; a++) {
-                    double up = 0;
-                    double down = 0;
+                for(int a = 0; a < dim; a++) {
+                    double top = 0;
+                    
+
                     for(int j = 0; j < n; j++) {
                         if(i == j) continue;
                         double [] Xij = new double[dim];
@@ -110,25 +128,26 @@ public class StressMajorization implements Runnable {
                             Xij[k] = Xt[i][k]-Xt[j][k];
                         }
 
-                        if(Graph.norm(Xij) < EPS) {
-                            up += w[i][j]*(Xt[j][a]+d[i][j]*(Xt[i][a]-Xt[j][a])) / norm(Xij);
+                        if(norm(Xij) < EPS) {
+                            top += w[i][j]*(Xt[j][a]+d[i][j]*(Xt[i][a]-Xt[j][a]) / norm(Xij));
                         } else {
-                            up += w[i][j]*(Xt[j][a]);
-                        }
-
-                        Xt[i][a] =   up / down;                      
+                            top += w[i][j]*(Xt[j][a]);
+                        }                     
                     }
+                    Xt[i][a] =  top / bottom; 
                 }
             }
 
             double cur = stress(Xt);
-            if(prev - cur < EPS) {
+            System.out.println("stress: " + id + " " + cur);
+            if(Math.abs(prev -cur) < EPS) {
                 prev = cur;
                 break;
             }
 
             prev = cur;
         } while(true);
+        System.out.println("fin " + prev);
 
         result.addResult(new Output(prev, Xt));//curとXtを保存し、Resultに格納する
     }

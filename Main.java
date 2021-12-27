@@ -1,10 +1,10 @@
 public class Main {
-    private final static int TH_COUNT = 3;
+    private final static int TH_COUNT = 1;
     private final static int DIMENSION = 2;
 
     public static void main(String... args) throws InterruptedException{
         long startTimeMsec = System.currentTimeMillis();
-        //{from, to weight}(無向グラフ)
+        //{from, to weight}
         int[][] input = {
             {1, 2, 4},
             {1, 3, 3},
@@ -30,6 +30,7 @@ public class Main {
         }
 
         result.draw();
+        System.out.println("3333333");
         long entTimeMsec = System.currentTimeMillis();
         System.out.println("Processing time:" + (entTimeMsec - startTimeMsec) + " msec");
     }
