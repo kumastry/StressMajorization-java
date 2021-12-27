@@ -6,9 +6,9 @@ public class StressMajorization implements Runnable {
     private double [][] d;
     private double [][] w;
     private double [][] Xt;
-    private static final double EPS = 1e-4;
-    private static final double INF = 1e9;
-    private Result result = new Result();
+    private static final double EPS = 1e-9;
+    private static final double INF = 1e18;
+    private Result result;
     private int id;
 
 
@@ -48,6 +48,7 @@ public class StressMajorization implements Runnable {
         this.d = sm.d.clone();
         this.w = sm.w.clone();
         this.id = id;
+        this.result = result;
     }
 
     //dとwの準備
@@ -64,6 +65,7 @@ public class StressMajorization implements Runnable {
 
         for(int i = 0; i < n; i++) {
             for(int j = 0; j < n; j++) {
+                System.out.println(d[i][j]);
                 if(i != j) {
                     w[i][j] = 1 / (d[i][j]*d[i][j]);
                 }
@@ -100,26 +102,21 @@ public class StressMajorization implements Runnable {
 
         for(int i = 0; i < n; i++) {
             for(int j = 0; j < dim; j++) {
-                Xt[i][j] = 20*Math.random();
-                //System.out.println(Xt[i][j]);
+                Xt[i][j] = 400*Math.random();
+                System.out.println(Xt[i][j]);
             }
         }
 
         System.out.println("str");
         double prev = INF;
-        double bottom = 0;
-        for(int i = 0; i < n; i++) {
-            for(int j = 0; j < n; j++) {
-                bottom += w[i][j];
-            }
-        }
+  
 
         do {
 
             for(int i = 0; i < n; i++) {
                 for(int a = 0; a < dim; a++) {
                     double top = 0;
-                    
+                    double bottom = 0;
 
                     for(int j = 0; j < n; j++) {
                         if(i == j) continue;
@@ -128,26 +125,30 @@ public class StressMajorization implements Runnable {
                             Xij[k] = Xt[i][k]-Xt[j][k];
                         }
 
-                        if(norm(Xij) < EPS) {
+                        if(norm(Xij) > EPS) {
                             top += w[i][j]*(Xt[j][a]+d[i][j]*(Xt[i][a]-Xt[j][a]) / norm(Xij));
                         } else {
                             top += w[i][j]*(Xt[j][a]);
                         }                     
+
+
+                        bottom += w[i][j];
                     }
+
                     Xt[i][a] =  top / bottom; 
                 }
             }
 
             double cur = stress(Xt);
-            System.out.println("stress: " + id + " " + cur);
-            if(Math.abs(prev -cur) < EPS) {
+            System.out.println(" #" + id + " stress: " + cur);
+            if((prev - cur)  < EPS * prev) {
                 prev = cur;
                 break;
             }
 
             prev = cur;
         } while(true);
-        System.out.println("fin " + prev);
+        System.out.println("fin #"+id);
 
         result.addResult(new Output(prev, Xt));//curとXtを保存し、Resultに格納する
     }

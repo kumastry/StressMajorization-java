@@ -1,5 +1,5 @@
 public class Main {
-    private final static int TH_COUNT = 1;
+    private final static int TH_COUNT = 100;
     private final static int DIMENSION = 2;
 
     public static void main(String... args) throws InterruptedException{
@@ -10,7 +10,7 @@ public class Main {
             {1, 3, 3},
             {1, 4, 6},
             {2, 4, 4},
-            {3, 4, 4},
+            {3, 4, 5},
         };
 
         StressMajorization preparation = new StressMajorization(input, DIMENSION);
@@ -20,7 +20,7 @@ public class Main {
 
         Thread[] smThreads = new Thread[TH_COUNT];
         for(int i = 0; i < TH_COUNT; i++) {
-            StressMajorization sm = new StressMajorization(i+1,preparation, result);
+            StressMajorization sm = new StressMajorization(i+1, preparation, result);
             smThreads[i] = new Thread(sm);
             smThreads[i].start();
         }
@@ -30,7 +30,6 @@ public class Main {
         }
 
         result.draw();
-        System.out.println("3333333");
         long entTimeMsec = System.currentTimeMillis();
         System.out.println("Processing time:" + (entTimeMsec - startTimeMsec) + " msec");
     }
